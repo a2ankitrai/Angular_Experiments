@@ -1,0 +1,20 @@
+{
+  "name": "angular_test",
+  "description": "",
+  "main": "index.html",
+  "license": "ISC",
+  "moduleType": [],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.5.0",
+    "angular-route": "^1.5.2"
+  }
+}

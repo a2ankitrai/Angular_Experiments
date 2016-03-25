@@ -1,0 +1,64 @@
+      <div ng-controller="readZipJSCtrl">
+            
+                <h2>Read a zip file</h2>
+        
+            <ol id="demo-container">
+                <li>
+                    <label>
+                        <span class="form-label">choose a zip file</span>
+                        <input type="file" accept="application/zip" id="file-inputR">
+                         <button ng-click="initiateUploadR()"> Upload</button>
+                    </label>
+                </li>
+            
+                <li>
+                    <span class="form-label">download zip content</span>
+                    <ul id="file-listR" class="file-list">
+                    </ul>
+                </li>
+            </ol>
+        </div>  
+
+
+        <div ng-controller="writeZipJSCtrl">
+            
+             <h2>Create a zip file</h2>
+
+             <ol id="demo-container">
+             <li>
+                <label>
+                    <span class="form-label">choose temporary storage</span>
+                    <select id="creation-method-input">
+                        <option value="Blob">RAM</option>
+                        <option value="File">HDD</option>
+                    </select>
+                </label>
+             </li>   
+            <li>
+                <label>
+                    <span class="form-label">add files into the zip</span>
+                    <input type="file" multiple id="file-inputW">
+                    <button ng-click="initiateUpload()"> Upload</button>
+                </label>
+            </li>
+                      
+            <li>
+                <span class="form-label">view zip content</span>
+                <ul id="file-list" class="file-list">
+                </ul>
+            </li>
+            <li>
+                <label>
+                    <span class="form-label">set zip file name</span>
+                    <input type="text" id="filename-input" value="Sample.zip">
+                </label>
+            </li>
+            <li>
+                <span class="form-label">download the zip file</span>
+                <a id="download-button" href="#">Download</a>
+            </li>
+        </ol>
+        </div>
+
+            <script type="text/javascript" src="js_vendors/zip.js"></script>
+            <script type="text/javascript" src="js_vendors/z-worker.js"></script>

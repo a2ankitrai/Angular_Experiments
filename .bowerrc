@@ -1,0 +1,4 @@
+{
+	"proxy": "http://proxy.apac.etn.com:8080",
+	"https-proxy": "http://proxy.apac.etn.com:8080"	 
+}

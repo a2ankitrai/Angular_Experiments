@@ -1,0 +1,23 @@
+        <div>
+              
+            <form name="myForm" ng-submit="">
+                <input ng-model='file' type="file" id="file" multiple />
+                <input type="button" value='Submit' ng-click="upload()"/>
+            </form>
+
+         <textarea id="sample">
+             
+
+         </textarea>   
+
+        <h3>Progress:</h3>
+        <div style="width:100%;height:20px;border:1px solid black;">
+        <div id="bar" style="background-color:#45F;width:0px;height:20px;"></div>
+        </div>    
+
+        <h3>File contents:</h3>
+            <pre>
+                <code id="output">
+                </code>
+            </pre>    
+        </div>     
