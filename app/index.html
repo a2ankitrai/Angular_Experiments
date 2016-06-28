@@ -1,25 +1,32 @@
 <!doctype html>
 <html ng-app="myApp" lang="en">
-    <head>
-       
-        <title>Angular Tester</title>
-       <!--  <link rel="stylesheet" href="css/default.css"> -->
-        <link rel="stylesheet" href="css/demo.css">          
-    </head>
-    
-    <body>
-         
-        <div ng-view autoscroll></div>        
 
-        <script src="../bower_components/angular/angular.js"></script>
-        <script src="../bower_components/angular-route/angular-route.min.js"></script>
-        <script src="js/app.js"></script>
-        <script src="js/controllers/appControllers.js"></script>
-        <script src="js/controllers/basicsCtrl.js"></script>
-        <script src="js/controllers/fileUploadCtrl.js"></script>
-        <script src="js/services/appServices.js"></script>
-        <script src="js/factories/appFactories.js"></script>
-        <script src="js/directives/appDirectives.js"></script>
-               
-    </body>
+<head>
+    <title>Angular Tester</title>
+    <!--  <link rel="stylesheet" href="css/default.css"> -->
+    <link rel="stylesheet" href="css/demo.css">
+</head>
+
+<body>
+    <div ng-view autoscroll></div>
+    <script src="../bower_components/angular/angular.js"></script>
+    <script src="../bower_components/angular-route/angular-route.min.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script src="js_vendors/underscore-min.js"></script>
+    <script src="js_vendors/baseConverter.js"></script>
+    
+    <script src="js/controllers/appControllers.js"></script>
+    <script src="js/controllers/basicsCtrl.js"></script>
+    <script src="js/controllers/fileUploadCtrl.js"></script>
+    <script src="js/controllers/dynamicScopeCtrl.js"></script>
+    <script src="js/controllers/expressionEvaluateCtrl.js"></script>
+    
+    <script src="js/services/appServices.js"></script>
+    
+    <script src="js/factories/appFactories.js"></script>
+    
+    <script src="js/directives/appDirectives.js"></script>
+</body>
+
 </html>

@@ -25,8 +25,9 @@ angular.module('myAppControllers').controller('firstCtrl', ['$scope','firstServi
 		    });
 
 		promise.then(  
-		    function(x) { console.log(x); },
+		    function(x) { console.log(x+"phase 1"); },
 		    function(reason) { console.log('Error: ' + reason); });
+
 }]);
 
 angular.module('myAppControllers').controller('secondCtrl', ['$scope', function($scope){  

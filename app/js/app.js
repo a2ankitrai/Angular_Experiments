@@ -28,6 +28,14 @@ var app = angular.module('myApp', [
         templateUrl: 'partials/zipUnzip.html',
         controller:'readZipJSCtrl'
       }).
+     when('/dynamicScope', {
+        templateUrl: 'partials/dynamicScope.html',
+        controller:'dynamicScopeCtrl'
+      }).
+     when('/expressionEvaluate', {
+        templateUrl: 'partials/expressionEvaluate.html',
+        controller:'expressionEvaluateCtrl'
+      }).
       otherwise({
         redirectTo: '/index'
       }); 
