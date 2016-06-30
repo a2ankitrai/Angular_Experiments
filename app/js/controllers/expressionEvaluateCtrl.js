@@ -21,7 +21,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             /* var str = "FLIPBIT(ISNONZERO(HEXDEC[44][1])) -->";*/
 
             if (!str) {
-                str = "{(CONDITION(2, == , 2)) ? " +
+                str = "{(CONDITION(2, == , 2) && (3, == ,3)) ? " +
                     "{(CONDITION(1, ==, 3)) ? 5 : {(CONDITION(45, ==, 45)) ? 76 : 67}} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
             }
 
