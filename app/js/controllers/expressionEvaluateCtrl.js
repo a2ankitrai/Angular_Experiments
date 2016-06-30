@@ -1,7 +1,17 @@
 angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope',
     function($scope) {
 
-        function evaluate(str) {
+        function evaluate(str, depth) {
+
+            if (depth == undefined) {
+                depth = 0;
+            } else {
+                if (depth >= 10) {
+                    console.log("too much recursion");
+                    return;
+                }
+                depth++;
+            }
 
             var unaryOpx = ['HEXDEC', 'HEXBIN', 'BINDEC', 'DECBIN', 'EXP'];
             var ternaryOpx = ['CONDITION'];
@@ -11,7 +21,8 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             /* var str = "FLIPBIT(ISNONZERO(HEXDEC[44][1])) -->";*/
 
             if (!str) {
-                str = "{(CONDITION(2, == , 3)) ? {(CONDITION(1, ==, 1)) ? 5 : 9} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
+                str = "{(CONDITION(2, == , 2)) ? " +
+                    "{(CONDITION(1, ==, 3)) ? 5 : {(CONDITION(45, ==, 45)) ? 76 : 67}} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
             }
 
             var tokens = str.split('');
@@ -124,44 +135,44 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                         falsyPath += tokens[i++];
                     }
                     i++;
+ 
+                        if (conditionResult == true) {
+                            valueStack.push(evaluate(truthyPath, depth));
+                        } else {
+                            valueStack.push(evaluate(falsyPath, depth));
+                        }                   
 
-                    if (conditionResult == true) {
-                        valueStack.push(evaluate(truthyPath));
-                    } else {
-                        valueStack.push(evaluate(falsyPath));
-                    }
+                    /* if (value == false) {
+                         valueStack.pop();
+                         var falsyPath = '';
+                         var nestedConditionCounter = 0;
+                         while (i < tokens.length) {
 
-                   /* if (value == false) {
-                        valueStack.pop();
-                        var falsyPath = '';
-                        var nestedConditionCounter = 0;
-                        while (i < tokens.length) {
+                             if (tokens[i] == '{') {
+                                 nestedConditionCounter++;
+                             }
 
-                            if (tokens[i] == '{') {
-                                nestedConditionCounter++;
-                            }
+                             if (tokens[i] == '}') {
+                                 if (nestedConditionCounter == 0) {
+                                     break;
+                                 } else {
+                                     nestedConditionCounter--;
+                                 }
+                             }
 
-                            if (tokens[i] == '}') {
-                                if (nestedConditionCounter == 0) {
-                                    break;
-                                } else {
-                                    nestedConditionCounter--;
-                                }
-                            }
+                             falsyPath += tokens[i];
+                             i++;
+                         }
+                         opStack.pop();
 
-                            falsyPath += tokens[i];
-                            i++;
-                        }
-                        opStack.pop();
-
-                        var falsyPathResult = evaluate(falsyPath);
-                        valueStack.push(falsyPathResult);
-                    } else {
-                        while (i < tokens.length && tokens[i] != '}') {
-                            i++;
-                        }
-                    }
-                    opStack.pop();*/
+                         var falsyPathResult = evaluate(falsyPath);
+                         valueStack.push(falsyPathResult);
+                     } else {
+                         while (i < tokens.length && tokens[i] != '}') {
+                             i++;
+                         }
+                     }
+                     opStack.pop();*/
                 }
 
                 /*if (tokens[i] == ':') {
