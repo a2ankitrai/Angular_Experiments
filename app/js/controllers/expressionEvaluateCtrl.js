@@ -11,7 +11,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             /* var str = "FLIPBIT(ISNONZERO(HEXDEC[44][1])) -->";*/
 
             if (!str) {
-                str = "{(CONDITION(2, == , 3)) ? 1 : {(CONDITION(1, ==, 1)) ? 5 : 9} }";
+                str = "{(CONDITION(2, == , 3)) ? {(CONDITION(1, ==, 1)) ? 5 : 9} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
             }
 
             var tokens = str.split('');
@@ -65,7 +65,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 }
 
                 // Current token is an opening brace, push it to 'opStack'
-                if (tokens[i] == '(' || tokens[i] == '?' || tokens[i] == '{') {
+                if (tokens[i] == '(' || tokens[i] == '{') {
                     opStack.push(tokens[i]);
                 }
 
@@ -77,7 +77,94 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     opStack.pop();
                 }
 
-                if (tokens[i] == ':') {
+                if (tokens[i] == '?') {
+
+                    var conditionResult = valueStack.pop();
+                    i++;
+                    var truthyPath = '',
+                        falsyPath = '',
+                        truthyNestedCondition = 0,
+                        falsyNestedCondition = 0;
+
+                    // reading the truthyPath    
+                    while (i < tokens.length) {
+
+                        if (tokens[i] == ":" && truthyNestedCondition == 0) {
+                            break;
+                        }
+
+                        if (tokens[i] == "{") {
+                            truthyNestedCondition++;
+                        }
+
+                        if (tokens[i] == '}') {
+                            truthyNestedCondition--;
+                        }
+
+                        truthyPath += tokens[i++];
+                    }
+
+                    i++;
+
+                    //reading the falsyPath
+                    while (i < tokens.length) {
+
+                        if (tokens[i] == '{') {
+                            falsyNestedCondition++;
+                        }
+
+                        if (tokens[i] == '}') {
+                            if (falsyNestedCondition == 0) {
+                                break;
+                            } else {
+                                falsyNestedCondition--;
+                            }
+                        }
+
+                        falsyPath += tokens[i++];
+                    }
+                    i++;
+
+                    if (conditionResult == true) {
+                        valueStack.push(evaluate(truthyPath));
+                    } else {
+                        valueStack.push(evaluate(falsyPath));
+                    }
+
+                   /* if (value == false) {
+                        valueStack.pop();
+                        var falsyPath = '';
+                        var nestedConditionCounter = 0;
+                        while (i < tokens.length) {
+
+                            if (tokens[i] == '{') {
+                                nestedConditionCounter++;
+                            }
+
+                            if (tokens[i] == '}') {
+                                if (nestedConditionCounter == 0) {
+                                    break;
+                                } else {
+                                    nestedConditionCounter--;
+                                }
+                            }
+
+                            falsyPath += tokens[i];
+                            i++;
+                        }
+                        opStack.pop();
+
+                        var falsyPathResult = evaluate(falsyPath);
+                        valueStack.push(falsyPathResult);
+                    } else {
+                        while (i < tokens.length && tokens[i] != '}') {
+                            i++;
+                        }
+                    }
+                    opStack.pop();*/
+                }
+
+                /*if (tokens[i] == ':') {
                     opStack.push(tokens[i]);
                     processOperation();
                     opStack.pop();
@@ -87,7 +174,21 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     if (value == false) {
                         valueStack.pop();
                         var falsyPath = '';
-                        while (i < tokens.length && tokens[i] != '}') {
+                        var nestedConditionCounter = 0;
+                        while (i < tokens.length) {
+
+                            if (tokens[i] == '{') {
+                                nestedConditionCounter++;
+                            }
+
+                            if (tokens[i] == '}') {
+                                if (nestedConditionCounter == 0) {
+                                    break;
+                                } else {
+                                    nestedConditionCounter--;
+                                }
+                            }
+
                             falsyPath += tokens[i];
                             i++;
                         }
@@ -101,7 +202,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                         }
                     }
                     opStack.pop();
-                }
+                }*/
 
                 // Current token is a numeric operator.
                 if (tokens[i] == '+' || tokens[i] == '*' || tokens[i] == '/') {
