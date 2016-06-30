@@ -5,20 +5,14 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
             var unaryOpx = ['HEXDEC', 'HEXBIN', 'BINDEC', 'DECBIN', 'EXP'];
             var ternaryOpx = ['CONDITION'];
-            var str = "(HEXDEC[20][0])*(EXP[21][1]) ";
+            /*  var str = "(HEXDEC[20][0])*(EXP[21][1]) ";*/
             /* var str = "(HEXDEC([6][1] + [6][0])) * (HEXDEC([6][2])) * (EXP(HEXBIN[8][0]))";*/
             //     var str = "(HEXDEC[44][2]) * 0.02 ";
             /* var str = "FLIPBIT(ISNONZERO(HEXDEC[44][1])) -->";*/
- 
+
             if (!str) {
-                /*str = "(CONDITION((HEXDEC[24][1]), == , 1)) ? (EXP(HEXBIN[8][0])) "+
-                      " : (CONDITION((HEXDEC[24][1]), == , 1)) ? 110 : 290 * (HEXDEC([6][1] + [6][0]))";*/
-
-                str = " (CONDITION((HEXDEC[24][1]), == , 0)) ? (HEXDEC([6][1] + [6][0])) : " +
-                    "(CONDITION((HEXDEC[24][1]), == , 0)) ? (10 * 1.25) : " +
-                    "((HEXDEC[1][0]) * 10 )   * (HEXDEC[20][0])*(EXP[21][1])";
+                str = "{(CONDITION(2, == , 3)) ? 1 : {(CONDITION(1, ==, 1)) ? 5 : 9} }";
             }
-
 
             var tokens = str.split('');
 
@@ -71,7 +65,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 }
 
                 // Current token is an opening brace, push it to 'opStack'
-                if (tokens[i] == '(') {
+                if (tokens[i] == '(' || tokens[i] == '?' || tokens[i] == '{') {
                     opStack.push(tokens[i]);
                 }
 
@@ -83,26 +77,31 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     opStack.pop();
                 }
 
-                // Current token is an opening brace, push it to 'opStack'
-                /*if (tokens[i] == '{') {
+                if (tokens[i] == ':') {
                     opStack.push(tokens[i]);
-                    i++; 
-                    var conditionExpression = '';
+                    processOperation();
+                    opStack.pop();
 
-                    while (i < tokens.length && tokens[i] != '}') {
-                    	conditionExpression += tokens[i];
-                    	i++;
-                    }
-                    evaluate(conditionExpression);
-                }
+                    var value = valueStack[valueStack.length - 1];
+                    i++;
+                    if (value == false) {
+                        valueStack.pop();
+                        var falsyPath = '';
+                        while (i < tokens.length && tokens[i] != '}') {
+                            falsyPath += tokens[i];
+                            i++;
+                        }
+                        opStack.pop();
 
-                // Closing brace encountered, solve entire brace
-                if (tokens[i] == '}') {
-                    while (opStack[opStack.length - 1] != '{') {
-                        processOperation();
+                        var falsyPathResult = evaluate(falsyPath);
+                        valueStack.push(falsyPathResult);
+                    } else {
+                        while (i < tokens.length && tokens[i] != '}') {
+                            i++;
+                        }
                     }
                     opStack.pop();
-                }*/
+                }
 
                 // Current token is a numeric operator.
                 if (tokens[i] == '+' || tokens[i] == '*' || tokens[i] == '/') {
@@ -119,30 +118,6 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     opStack.push(tokens[i]);
                 }
 
-               /* if (tokens[i] == '?') {
-
-                    var conditionalResult = undefined;
-                    var trueCondition = '';
-                    i++;
-                    while (i < tokens.length && tokens[i] != ':') {
-                        trueCondition += tokens[i++];
-                    }
-                    i++
-                    var falseCondition = '';
-                    while (i < tokens.length && tokens[i] != '}') {
-                        falseCondition += tokens[i++];
-                    }
-                    if (valueStack.pop()) {
-                        conditionalResult = trueCondition;
-                    } else {
-                        conditionalResult = falseCondition;
-                    }
-                    
-                    var myResult = evaluate(conditionalResult);
-
-                    console.log(myResult);
-                }*/
-
             }
 
             // Entire expression has been parsed at this point, apply remaining
@@ -153,11 +128,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
             var finalResult = valueStack.pop();
 
-              console.log(finalResult);
+            console.log(finalResult);
             // Top of 'values' contains result, return it
             /*return finalResult;*/
-
-           
 
             function processOperation() {
                 var operation = opStack.pop();
@@ -252,15 +225,26 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     return valueA == 0 ? 1 : 0;
                     break;
                 case 'CONDITION':
+                    var conditionResult;
                     switch (valueB) {
                         case '==':
                             if (valueC == valueA) {
-                                return true;
-                            } else return false
+                                conditionResult = true;
+                            } else {
+                                conditionResult = false;
+                            }
                             break;
                         default:
                             console.log("default case in condition");
                             break;
+                    }
+                    return conditionResult;
+                    break;
+                case ":":
+                    if (valueB !== "false") {
+                        return valueA;
+                    } else {
+                        return false;
                     }
                     break;
                 case 'EXP':
