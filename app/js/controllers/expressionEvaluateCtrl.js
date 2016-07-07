@@ -14,16 +14,23 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             }
 
             var unaryOpx = ['HEXDEC', 'HEXBIN', 'BINDEC', 'DECBIN', 'EXP'];
-            var ternaryOpx = ['CONDITION'];
+           
             /*  var str = "(HEXDEC[20][0])*(EXP[21][1]) ";*/
             /* var str = "(HEXDEC([6][1] + [6][0])) * (HEXDEC([6][2])) * (EXP(HEXBIN[8][0]))";*/
             //     var str = "(HEXDEC[44][2]) * 0.02 ";
             /* var str = "FLIPBIT(ISNONZERO(HEXDEC[44][1])) -->";*/
 
+            /*if (!str) {
+                str = "{(CONDITION(CONDITION(2 == 2)) && (CONDITION(3 == 2))) ? " +
+                    "{(CONDITION(1, ==, 3)) ? 5 : {(CONDITION(45, ==, 42)) ? 76 : 67}} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
+            
+                str =   "{(2 == 2) ? {(3 == 3) || (4 == 5)? 8 : 9} : 5} * 2";    
+            }*/
+
             if (!str) {
-                str = "{(CONDITION(2, == , 2) && (3, == ,3)) ? " +
-                    "{(CONDITION(1, ==, 3)) ? 5 : {(CONDITION(45, ==, 45)) ? 76 : 67}} : {(CONDITION(7, ==, 8)) ? 5 : 23}}";
+              str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][1])"  ;
             }
+ 
 
             var tokens = str.split('');
 
@@ -31,6 +38,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             var opStack = new Array();
 
             for (var i = 0; i < tokens.length; i++) {
+
+                console.log(valueStack);
+                console.log(opStack);
 
                 if (tokens[i] == ' ')
                     continue;
@@ -62,17 +72,29 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     valueStack.push(valBuffer);
                 }
 
+                if(tokens[i] == "'"){
+                    var valBuffer = "";
+                    i++
+                    while(i<tokens.length && tokens[i]!="'"){
+                        valBuffer += tokens[i++];
+                    }
+                    valueStack.push(valBuffer);
+                }
+
                 // Current token is comparision operator to be used in conditional evaluation
-                if (tokens[i] == '=') {
+                
+                if (tokens[i] == '&' || tokens[i] == '=' || tokens[i] == '|') {
+                    var currentTokenVal = tokens[i]
                     var valBuffer = '';
                     var endBracketCtr = 0;
-                    while (i < tokens.length && tokens[i] == '=') {
+                    while (i < tokens.length && tokens[i] == currentTokenVal) {
                         valBuffer += tokens[i];
                         i++;
                     }
-                    if (valBuffer == '==') {
-                        valueStack.push(valBuffer);
+                    while (opStack.length != 0 && hasPrecedence(valBuffer, opStack[opStack.length - 1])) {
+                        processOperation();
                     }
+                    opStack.push(valBuffer);
                 }
 
                 // Current token is an opening brace, push it to 'opStack'
@@ -102,13 +124,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
                         if (tokens[i] == ":" && truthyNestedCondition == 0) {
                             break;
-                        }
-
-                        if (tokens[i] == "{") {
+                        } else if (tokens[i] == "{") {
                             truthyNestedCondition++;
-                        }
-
-                        if (tokens[i] == '}') {
+                        } else if (tokens[i] == '}') {
                             truthyNestedCondition--;
                         }
 
@@ -122,9 +140,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
                         if (tokens[i] == '{') {
                             falsyNestedCondition++;
-                        }
-
-                        if (tokens[i] == '}') {
+                        } else if (tokens[i] == '}') {
                             if (falsyNestedCondition == 0) {
                                 break;
                             } else {
@@ -135,85 +151,15 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                         falsyPath += tokens[i++];
                     }
                     i++;
- 
-                        if (conditionResult == true) {
-                            valueStack.push(evaluate(truthyPath, depth));
-                        } else {
-                            valueStack.push(evaluate(falsyPath, depth));
-                        }                   
 
-                    /* if (value == false) {
-                         valueStack.pop();
-                         var falsyPath = '';
-                         var nestedConditionCounter = 0;
-                         while (i < tokens.length) {
-
-                             if (tokens[i] == '{') {
-                                 nestedConditionCounter++;
-                             }
-
-                             if (tokens[i] == '}') {
-                                 if (nestedConditionCounter == 0) {
-                                     break;
-                                 } else {
-                                     nestedConditionCounter--;
-                                 }
-                             }
-
-                             falsyPath += tokens[i];
-                             i++;
-                         }
-                         opStack.pop();
-
-                         var falsyPathResult = evaluate(falsyPath);
-                         valueStack.push(falsyPathResult);
-                     } else {
-                         while (i < tokens.length && tokens[i] != '}') {
-                             i++;
-                         }
-                     }
-                     opStack.pop();*/
-                }
-
-                /*if (tokens[i] == ':') {
-                    opStack.push(tokens[i]);
-                    processOperation();
-                    opStack.pop();
-
-                    var value = valueStack[valueStack.length - 1];
-                    i++;
-                    if (value == false) {
-                        valueStack.pop();
-                        var falsyPath = '';
-                        var nestedConditionCounter = 0;
-                        while (i < tokens.length) {
-
-                            if (tokens[i] == '{') {
-                                nestedConditionCounter++;
-                            }
-
-                            if (tokens[i] == '}') {
-                                if (nestedConditionCounter == 0) {
-                                    break;
-                                } else {
-                                    nestedConditionCounter--;
-                                }
-                            }
-
-                            falsyPath += tokens[i];
-                            i++;
-                        }
-                        opStack.pop();
-
-                        var falsyPathResult = evaluate(falsyPath);
-                        valueStack.push(falsyPathResult);
+                    if (conditionResult == true) {
+                        valueStack.push(evaluate(truthyPath, depth));
                     } else {
-                        while (i < tokens.length && tokens[i] != '}') {
-                            i++;
-                        }
+                        valueStack.push(evaluate(falsyPath, depth));
                     }
                     opStack.pop();
-                }*/
+                }
+ 
 
                 // Current token is a numeric operator.
                 if (tokens[i] == '+' || tokens[i] == '*' || tokens[i] == '/') {
@@ -241,6 +187,8 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             var finalResult = valueStack.pop();
 
             console.log(finalResult);
+            return finalResult;
+
             // Top of 'values' contains result, return it
             /*return finalResult;*/
 
@@ -284,6 +232,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             }
 
             if (refC != undefined) {
+                refC = String(refC);
                 if (refC.indexOf('[') > -1 && refC.indexOf(']') > -1) {
                     refC.replace(/\[(.*?)\]/g, function($0, $1) { bIndexArr.push($1) });
                     valueC = bytesGroupArray[bIndexArr[0] - 1][bIndexArr[1]];
@@ -304,7 +253,11 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     return parseFloat(valueA) * parseFloat(valueB);
                     break;
                 case '/':
-                    return parseFloat(valueA) / parseFloat(valueB);
+                    if (parseFloat(valueB) == 0) {
+                        return 0;
+                    } else {
+                        return parseFloat(valueB) / parseFloat(valueA);
+                    }
                     break;
                 case 'CONCAT':
                     return '' + valueB + valueA;
@@ -336,11 +289,40 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 case 'FLIPBIT':
                     return valueA == 0 ? 1 : 0;
                     break;
+                case '==':
+                    if (valueB == valueA) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+                case '&&':
+                    if (valueB == "true" && valueA == "true") {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+                case '||':
+                    if (valueB == "true" || valueA == "true") {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+
                 case 'CONDITION':
                     var conditionResult;
                     switch (valueB) {
                         case '==':
                             if (valueC == valueA) {
+                                conditionResult = true;
+                            } else {
+                                conditionResult = false;
+                            }
+                            break;
+                        case '&&':
+                            if (valueC == "true" && valueA == "true") {
                                 conditionResult = true;
                             } else {
                                 conditionResult = false;
@@ -361,7 +343,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     break;
                 case 'EXP':
                     console.log("vaL :" + valueA);
-                    var binaryArray = String(valueA).split('');
+                    var binaryArray = String(padDigits(ConvertBase.hex2bin(valueA))).split('');
                     var signValue = binaryArray[0];
                     console.log("signValue: " + signValue);
                     var complementedArray = [];
@@ -407,7 +389,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 return false;
             if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
                 return false;
-            else
+            else if (op1 == '==' && (op2 == '&&' || op2 == '||')) {
+                return false;
+            } else
                 return true;
         }
 
@@ -440,6 +424,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
         console.log(bytesGroupArray);
 
         function padDigits(number, digits) {
+            if (digits == undefined) {
+                digits = 8;
+            }
             return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
         }
 
