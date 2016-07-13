@@ -14,7 +14,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             }
 
             var unaryOpx = ['HEXDEC', 'HEXBIN', 'BINDEC', 'DECBIN', 'EXP'];
-           
+            var ternaryOpx = ['CONDITION'];
             /*  var str = "(HEXDEC[20][0])*(EXP[21][1]) ";*/
             /* var str = "(HEXDEC([6][1] + [6][0])) * (HEXDEC([6][2])) * (EXP(HEXBIN[8][0]))";*/
             //     var str = "(HEXDEC[44][2]) * 0.02 ";
@@ -28,9 +28,12 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             }*/
 
             if (!str) {
-              str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][1])"  ;
+                /* str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][2]) "  ;*/
+                //  str =   "{(2 <= 2) ? {(3 == 3 && 42 == 43)? 8 : {(3<2)? 90 : 66 }} : 5} * 2"; 
+                str = "{(2 <= 8 && 5 >= 5 && 9>3) ? {((4*2)==8 && 4<6 && 7>4)?(2*3):13} : 5} * 2";
+
             }
- 
+
 
             var tokens = str.split('');
 
@@ -39,108 +42,109 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
             for (var i = 0; i < tokens.length; i++) {
 
-                console.log(valueStack);
-                console.log(opStack);
+                console.log("valueStack: " + valueStack);
+                console.log("opStack: " + opStack);
 
-                if (tokens[i] == ' ')
+                if (tokens[i] == ' ') {
                     continue;
-
-                if (tokens[i] >= 'A' && tokens[i] <= 'Z') {
-                    var opBuffer = '';
-                    while (i < tokens.length && tokens[i] >= 'A' && tokens[i] <= 'Z')
-                        opBuffer += tokens[i++];
+                } else if (tokens[i] >= 'A' && tokens[i] <= 'Z') {
+                    var opBuffer = tokens[i];
+                    while ((i + 1) < tokens.length && tokens[i + 1] >= 'A' && tokens[i + 1] <= 'Z') {
+                        opBuffer += tokens[++i];
+                    }
                     opStack.push(opBuffer);
                 }
 
                 // Current token is a number, push it to stack for numbers
-                if (tokens[i] >= '0' && tokens[i] <= '9') {
-                    var valBuffer = '';
+                else if (tokens[i] >= '0' && tokens[i] <= '9') {
+                    var valBuffer = tokens[i];
                     // There may be more than one digits in number
-                    while (i < tokens.length && (tokens[i] >= '0' && tokens[i] <= '9') || tokens[i] == '.')
-                        valBuffer += tokens[i++];
-                    valueStack.push(valBuffer);
-                } else if (tokens[i] == '[') {
-                    var valBuffer = '';
-                    var endBracketCtr = 0;
-                    while (i < tokens.length && endBracketCtr < 2) {
-                        valBuffer += tokens[i];
-                        if (tokens[i] == ']') {
-                            endBracketCtr++;
-                        }
-                        i++;
+                    while ((i + 1) < tokens.length && (tokens[i + 1] >= "0" && tokens[i + 1] <= "9") || tokens[i + 1] == ".") {
+                        valBuffer += tokens[++i];
                     }
                     valueStack.push(valBuffer);
                 }
 
-                if(tokens[i] == "'"){
-                    var valBuffer = "";
-                    i++
-                    while(i<tokens.length && tokens[i]!="'"){
-                        valBuffer += tokens[i++];
+                // Current token is a reference to number, push it to val stack
+                else if (tokens[i] == '[') {
+                    var valBuffer = tokens[i];
+                    var endBracketCtr = 0;
+                    while ((i + 1) < tokens.length && endBracketCtr < 2) {
+                        if (tokens[i + 1] == ']') {
+                            endBracketCtr++;
+                        }
+                        valBuffer += tokens[++i];
                     }
+                    valueStack.push(valBuffer);
+                } else if (tokens[i] == "'") {
+                    let valBuffer = "";
+                    while ((i + 1) < tokens.length && tokens[i + 1] != "'") {
+                        valBuffer += tokens[++i];
+                    }
+                    i++;
                     valueStack.push(valBuffer);
                 }
 
                 // Current token is comparision operator to be used in conditional evaluation
-                
-                if (tokens[i] == '&' || tokens[i] == '=' || tokens[i] == '|') {
-                    var currentTokenVal = tokens[i]
-                    var valBuffer = '';
+                else if (tokens[i] == '&' || tokens[i] == '=' || tokens[i] == '|') {
+                    currentTokenVal = tokens[i];
+                    var valBuffer = tokens[i];
                     var endBracketCtr = 0;
-                    while (i < tokens.length && tokens[i] == currentTokenVal) {
-                        valBuffer += tokens[i];
-                        i++;
+                    while ((i + 1) < tokens.length && tokens[i + 1] == currentTokenVal) {
+                        valBuffer += tokens[++i];
                     }
                     while (opStack.length != 0 && hasPrecedence(valBuffer, opStack[opStack.length - 1])) {
                         processOperation();
                     }
                     opStack.push(valBuffer);
+                } else if (tokens[i] == '<' || tokens[i] == '>') {
+                    let opBuffer = tokens[i];
+                    while ((i + 1) < tokens.length && tokens[i + 1] == '=') {
+                        opBuffer += tokens[++i];
+                    }
+                    opStack.push(opBuffer);
                 }
 
                 // Current token is an opening brace, push it to 'opStack'
-                if (tokens[i] == '(' || tokens[i] == '{') {
+                else if (tokens[i] == '(' || tokens[i] == '{') {
                     opStack.push(tokens[i]);
                 }
 
                 // Closing brace encountered, solve entire brace
-                if (tokens[i] == ')') {
+                else if (tokens[i] == ')') {
                     while (opStack[opStack.length - 1] != '(') {
                         processOperation();
                     }
                     opStack.pop();
-                }
-
-                if (tokens[i] == '?') {
+                } else if (tokens[i] == '?') {
 
                     var conditionResult = valueStack.pop();
-                    i++;
                     var truthyPath = '',
                         falsyPath = '',
                         truthyNestedCondition = 0,
                         falsyNestedCondition = 0;
 
                     // reading the truthyPath    
-                    while (i < tokens.length) {
+                    while ((i + 1) < tokens.length) {
 
-                        if (tokens[i] == ":" && truthyNestedCondition == 0) {
+                        if (tokens[i + 1] == ":" && truthyNestedCondition == 0) {
                             break;
-                        } else if (tokens[i] == "{") {
+                        } else if (tokens[i + 1] == "{") {
                             truthyNestedCondition++;
-                        } else if (tokens[i] == '}') {
+                        } else if (tokens[i + 1] == '}') {
                             truthyNestedCondition--;
                         }
 
-                        truthyPath += tokens[i++];
+                        truthyPath += tokens[++i];
                     }
 
                     i++;
-
                     //reading the falsyPath
-                    while (i < tokens.length) {
+                    while ((i + 1) < tokens.length) {
 
-                        if (tokens[i] == '{') {
+                        if (tokens[i + 1] == '{') {
                             falsyNestedCondition++;
-                        } else if (tokens[i] == '}') {
+                        } else if (tokens[i + 1] == '}') {
                             if (falsyNestedCondition == 0) {
                                 break;
                             } else {
@@ -148,9 +152,8 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                             }
                         }
 
-                        falsyPath += tokens[i++];
+                        falsyPath += tokens[++i];
                     }
-                    i++;
 
                     if (conditionResult == true) {
                         valueStack.push(evaluate(truthyPath, depth));
@@ -159,10 +162,10 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     }
                     opStack.pop();
                 }
- 
+
 
                 // Current token is a numeric operator.
-                if (tokens[i] == '+' || tokens[i] == '*' || tokens[i] == '/') {
+                else if (tokens[i] == '+' || tokens[i] == '*' || tokens[i] == '/') {
 
                     // While top of 'ops' has same or greater precedence to current
                     // token, which is an operator. Apply operator on top of 'ops'
@@ -283,12 +286,6 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     else
                         return undefined;
                     break;
-                case 'ISNONZERO':
-                    return valueA == 0 ? 0 : 1;
-                    break;
-                case 'FLIPBIT':
-                    return valueA == 0 ? 1 : 0;
-                    break;
                 case '==':
                     if (valueB == valueA) {
                         return true;
@@ -310,33 +307,32 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                         return false;
                     }
                     break;
-
-                case 'CONDITION':
-                    var conditionResult;
-                    switch (valueB) {
-                        case '==':
-                            if (valueC == valueA) {
-                                conditionResult = true;
-                            } else {
-                                conditionResult = false;
-                            }
-                            break;
-                        case '&&':
-                            if (valueC == "true" && valueA == "true") {
-                                conditionResult = true;
-                            } else {
-                                conditionResult = false;
-                            }
-                            break;
-                        default:
-                            console.log("default case in condition");
-                            break;
+                case '<=':
+                    if (parseFloat(valueB) <= parseFloat(valueA)) {
+                        return true;
+                    } else {
+                        return false;
                     }
-                    return conditionResult;
                     break;
-                case ":":
-                    if (valueB !== "false") {
-                        return valueA;
+
+                case '>=':
+                    if (parseFloat(valueB) >= parseFloat(valueA)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+                case '<':
+                    if (parseFloat(valueB) < parseFloat(valueA)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+
+                case '>':
+                    if (parseFloat(valueB) > parseFloat(valueA)) {
+                        return true;
                     } else {
                         return false;
                     }
@@ -385,18 +381,19 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
         // Returns true if 'op2' has higher or same precedence as 'op1',
         // otherwise returns false.
         function hasPrecedence(op1, op2) {
-            if (op2 == '(' || op2 == ')')
+            if (op2 == '(' || op2 == ')') {
                 return false;
-            if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-'))
+            } else if ((op1 == '*' || op1 == '/') && (op2 == '+' || op2 == '-')) {
                 return false;
-            else if (op1 == '==' && (op2 == '&&' || op2 == '||')) {
+            } else if ((op1 == '==' || op1 == '<' || op1 == '<=' || op1 == '>' || op1 == '>=') && (op2 == '&&' || op2 == '||')) {
                 return false;
-            } else
+            } else {
                 return true;
+            }
         }
 
         var hexData = "3d 10 8a 10 8b 00 ff ff ff fe ff ff ff 03 0e 76 02 32 28 64 05 fe 14 03 " +
-            "28 14 f0 0a 32 05 ff 14 01 02 02 32 01 ff 00 1e 0f 8c 05 ff 03 1e 0a c8 " +
+            "28 14 f0 0a 32 05 ff 14 01 02 02 32 01 ff 00 1e 0f 0a 05 ff 03 1e 0a c8 " +
             "05 fe 00 28 14 8c 05 ff 01 28 18 64 01 fe 01 1e 0a 32 05 fe 00 00 00 00 " +
             "64 02 00 00 00 00 00 00 00 00 00 00 00 fe 26 00 00 00 00 00 00 32 00 00 " +
             "00 00 00 0a 00 00 00 00 1c 78 c0 12 00 00 1e 00 00 1e 00 00 1e 00 00 1e " +
