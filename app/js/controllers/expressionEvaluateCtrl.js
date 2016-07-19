@@ -30,7 +30,10 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             if (!str) {
                 /* str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][2]) "  ;*/
                 //  str =   "{(2 <= 2) ? {(3 == 3 && 42 == 43)? 8 : {(3<2)? 90 : 66 }} : 5} * 2"; 
-                str = "{(2 <= 8 && 5 >= 5 && 9>3) ? {((4*2)==8 && 4<6 && 7>4)?(2*3):13} : 5} * 2";
+                /*str = "{(2 <= 8 && 5 >= 5 && 9>3) ? {((4*2)==8 && 4<6 && 7>4)?(2*3):13} : 5} * 2";*/
+                str = "{('14,15,16' CONTAINS (15))? 4 : 2}";
+                //100 * 1 * 30 
+                //(HEXDEC([6][1] CONCAT [6][0])) 
 
             }
 
@@ -68,13 +71,20 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 // Current token is a reference to number, push it to val stack
                 else if (tokens[i] == '[') {
                     var valBuffer = tokens[i];
-                    var endBracketCtr = 0;
+                    var endBracketCtr = 0,
+                        indexArr = [];
                     while ((i + 1) < tokens.length && endBracketCtr < 2) {
                         if (tokens[i + 1] == ']') {
                             endBracketCtr++;
                         }
                         valBuffer += tokens[++i];
                     }
+
+                    valBuffer.replace(/\[(.*?)\]/g, function($0, $1) {
+                        indexArr.push($1)
+                    });
+                    valBuffer = bytesGroupArray[indexArr[0] - 1][indexArr[1]];
+
                     valueStack.push(valBuffer);
                 } else if (tokens[i] == "'") {
                     let valBuffer = "";
@@ -220,19 +230,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             var valueA, valueB, valueC, aIndexArr = [],
                 bIndexArr = [];
 
-            if (refA.indexOf('[') > -1 && refA.indexOf(']') > -1) {
-                refA.replace(/\[(.*?)\]/g, function($0, $1) { aIndexArr.push($1) });
-                valueA = bytesGroupArray[aIndexArr[0] - 1][aIndexArr[1]];
-            } else {
-                valueA = refA;
-            }
+            valueA = refA;
+            valueB = refB;
 
-            if (refB && refB.indexOf('[') > -1 && refB.indexOf(']') > -1) {
-                refB.replace(/\[(.*?)\]/g, function($0, $1) { bIndexArr.push($1) });
-                valueB = bytesGroupArray[bIndexArr[0] - 1][bIndexArr[1]];
-            } else {
-                valueB = refB;
-            }
 
             if (refC != undefined) {
                 refC = String(refC);
@@ -286,6 +286,13 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     else
                         return undefined;
                     break;
+                case 'CONTAINS':
+                    
+                    if(valueB.split(',').includes(valueA)){
+                        return true;
+                    }
+                    else return false;
+                    break;    
                 case '==':
                     if (valueB == valueA) {
                         return true;
@@ -362,7 +369,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
 
                     var calculatedExpValue = undefined;
 
-                    if (signValue == 1) {
+                    if (parseInt(signValue) === 1) {
                         console.log(1 / (Math.pow(10, complementedNumberB10AfterAdd)));
                         calculatedExpValue = 1 / Math.pow(10, complementedNumberB10AfterAdd);
                         /*console.log(1/(10^(parseInt(complementedNumberB10AfterAdd))));*/
@@ -392,14 +399,16 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             }
         }
 
-        var hexData = "3d 10 8a 10 8b 00 ff ff ff fe ff ff ff 03 0e 76 02 32 28 64 05 fe 14 03 " +
+        /*var hexData = "3d 10 8a 10 8b 00 ff ff ff fe ff ff ff 03 0e 76 02 32 28 64 05 fe 14 03 " +
             "28 14 f0 0a 32 05 ff 14 01 02 02 32 01 ff 00 1e 0f 0a 05 ff 03 1e 0a c8 " +
             "05 fe 00 28 14 8c 05 ff 01 28 18 64 01 fe 01 1e 0a 32 05 fe 00 00 00 00 " +
             "64 02 00 00 00 00 00 00 00 00 00 00 00 fe 26 00 00 00 00 00 00 32 00 00 " +
             "00 00 00 0a 00 00 00 00 1c 78 c0 12 00 00 1e 00 00 1e 00 00 1e 00 00 1e " +
             "00 00 3c 00 00 1e 00 00 1e 00 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 " +
             "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 2c 00 " +
-            "00 00 01 1e 00 00 00 00 00 00 00 00 00 00 00 97 1b 68";
+            "00 00 01 1e 00 00 00 00 00 00 00 00 00 00 00 97 1b 68";*/
+
+        var hexData = "3D 14 8A 15 8B 00 FF FF FF FE F7 FF FF 07 91 20 03 32 28 64 05 FE 02 03 28 14 F0 0A 32 05 FF 14 01 02 02 32 01 FF 00 19 0F 8C 05 FF 03 32 0A 32 05 FE 00 14 14 8C 05 FF 01 19 18 64 01 FE 03 32 0A 32 05 FE 00 00 00 00 64 02 00 00 00 00 00 00 00 00 00 00 00 FE 26 00 00 00 00 00 00 32 00 00 00 00 00 0A 00 00 00 00 1B 00 00 00 61 00 14 00 00 1E 00 00 FA 00 00 FA B4 00 05 00 00 01 32 14 FA 00 00 F9 00 1E 31 00 00 00 00 00 00 00 1E 00 00 00 00 00 00 00 00 00 00 09 00 01 80 00 00 02 02 00 00 00 00 4F 2C 20 DC FF 00 01 00 00 01 01 00 00 00 00 00 00 00 5F 21 A0";
 
         var hexBytes = hexData.split(" ");
         var bytesGroupArray = [];
