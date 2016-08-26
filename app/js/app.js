@@ -40,6 +40,10 @@ app.config(['$routeProvider',
             templateUrl: 'partials/directiveRecompile.html',
             controller: 'directiveRecompileCtrl'
         }).
+        when('/checksumCalculator', {
+            templateUrl: 'partials/checksumCalculator.html',
+            controller: 'checksumCalculatorCtrl'
+        }).
         otherwise({
             redirectTo: '/index'
         });

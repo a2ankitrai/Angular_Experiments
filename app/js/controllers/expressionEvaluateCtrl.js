@@ -31,7 +31,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 /* str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][2]) "  ;*/
                 //  str =   "{(2 <= 2) ? {(3 == 3 && 42 == 43)? 8 : {(3<2)? 90 : 66 }} : 5} * 2"; 
                 /*str = "{(2 <= 8 && 5 >= 5 && 9>3) ? {((4*2)==8 && 4<6 && 7>4)?(2*3):13} : 5} * 2";*/
-                str = "{('14,15,16' CONTAINS (15))? 4 : 2}";
+                str = "(DECHEX( 0.40 / (EXP[8][0])))";
                 //100 * 1 * 30 
                 //(HEXDEC([6][1] CONCAT [6][0])) 
 
@@ -268,6 +268,9 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 case 'HEXDEC':
                     return ConvertBase.hex2dec(valueA);
                     break;
+                case 'DECHEX':
+                    return ConvertBase.dec2hex(valueA);
+                    break;    
                 case 'HEXBIN':
                     console.log(padDigits(ConvertBase.hex2bin(valueA), 8));
                     return padDigits(ConvertBase.hex2bin(valueA), 8);

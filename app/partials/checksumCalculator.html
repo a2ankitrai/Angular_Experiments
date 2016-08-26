@@ -1,0 +1,26 @@
+<div ng-controller="checksumCalculatorCtrl">
+   
+<h1>Checksum Calculator</h1>
+
+    <div>
+    	<textarea rows="10" cols="90" ng-model="hexInput"></textarea>	
+    	<input type="button"  value="Calculate Checksum" name="Calculate Checksum" ng-click="calcChecksum()">
+    </div>
+    <br>
+    <div>
+    	Checksum in HEX : <b>{{checkSumHEX}} </b>   	
+    </div>
+    <div>
+    	Checksum MSB : <b>{{checksumMSB}} </b>   	
+    </div>
+    <div>
+    	Checksum LSB : <b>{{checksumLSB}} </b>   	
+    </div>
+    <div>
+    	LS byte decimal : <b>{{checksumLSBDec}} </b>
+    </div>
+    <div>
+    	LSB complement : <b>{{checksumLSBComplement}} </b>
+    </div>
+
+</div>
