@@ -7,6 +7,8 @@ angular.module('myAppControllers').controller('firstCtrl', ['$scope','firstServi
 
 	firstService.satSunNotPossible(); 
 
+	$scope.currentTimeStamp = Date.now();
+
 		function async1(value) {  
 		    var deferred = $q.defer();
 		    var asyncCalculation = value * 2;

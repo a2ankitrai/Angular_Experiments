@@ -31,7 +31,8 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                 /* str = "(HEXDEC[1][2]) CONCAT '.' CONCAT (HEXDEC[1][2]) "  ;*/
                 //  str =   "{(2 <= 2) ? {(3 == 3 && 42 == 43)? 8 : {(3<2)? 90 : 66 }} : 5} * 2"; 
                 /*str = "{(2 <= 8 && 5 >= 5 && 9>3) ? {((4*2)==8 && 4<6 && 7>4)?(2*3):13} : 5} * 2";*/
-                str = "(DECHEX( 0.40 / (EXP[8][0])))";
+               // str = "(DECHEX(0.29 / (EXP 'fe')))";
+                 str = "(DECHEX( 0.29 / (EXP[6][0])))";
                 //100 * 1 * 30 
                 //(HEXDEC([6][1] CONCAT [6][0])) 
 
@@ -259,18 +260,31 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     if (parseFloat(valueB) == 0) {
                         return 0;
                     } else {
-                        return parseFloat(valueB) / parseFloat(valueA);
+                        return Math.round(parseFloat(valueB) / parseFloat(valueA));
                     }
                     break;
                 case 'CONCAT':
                     return '' + valueB + valueA;
                     break;
+                case 'SPLIT':
+                    var splitIndex = parseInt(valueA);
+                    console.log("splitIndex: " + splitIndex);
+                    if ([0, 1].indexOf(splitIndex) === -1) {
+                        return 0;
+                    } else {
+                        if (splitIndex === 0) {
+                            return valueB.slice(0, valueB.length / 2);
+                        } else {
+                            return valueB.slice(-(valueB.length / 2));
+                        }
+                    }
+
                 case 'HEXDEC':
                     return ConvertBase.hex2dec(valueA);
                     break;
                 case 'DECHEX':
                     return ConvertBase.dec2hex(valueA);
-                    break;    
+                    break;
                 case 'HEXBIN':
                     console.log(padDigits(ConvertBase.hex2bin(valueA), 8));
                     return padDigits(ConvertBase.hex2bin(valueA), 8);
@@ -282,20 +296,25 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
                     return ConvertBase.dec2bin(valueA);
                     break;
                 case 'PICKBIT':
-                    valueB = padDigits(ConvertBase.hex2bin(valueB), 8);
+                    //   valueB = padDigits(ConvertBase.hex2bin(valueB), 8);
                     console.log(valueB);
-                    if (valueA >= 0 && valueA <= 7)
-                        return String(valueB).split('')[valueA];
-                    else
-                        return undefined;
+                    /*  if (valueA >= 0 && valueA <= 7)
+                          return String(valueB).split('')[valueA];
+                      else
+                          return undefined;*/
+
+                    return (valueB >>> valueA) & 1;
+
                     break;
+                case "PLACEBIT":
+                    return valueB | 1 << bit;
+
                 case 'CONTAINS':
-                    
-                    if(valueB.split(',').includes(valueA)){
+
+                    if (valueB.split(',').includes(valueA)) {
                         return true;
-                    }
-                    else return false;
-                    break;    
+                    } else return false;
+                    break;
                 case '==':
                     if (valueB == valueA) {
                         return true;
@@ -411,7 +430,7 @@ angular.module('myAppControllers').controller('expressionEvaluateCtrl', ['$scope
             "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0f 2c 00 " +
             "00 00 01 1e 00 00 00 00 00 00 00 00 00 00 00 97 1b 68";*/
 
-        var hexData = "3D 14 8A 15 8B 00 FF FF FF FE F7 FF FF 07 91 20 03 32 28 64 05 FE 02 03 28 14 F0 0A 32 05 FF 14 01 02 02 32 01 FF 00 19 0F 8C 05 FF 03 32 0A 32 05 FE 00 14 14 8C 05 FF 01 19 18 64 01 FE 03 32 0A 32 05 FE 00 00 00 00 64 02 00 00 00 00 00 00 00 00 00 00 00 FE 26 00 00 00 00 00 00 32 00 00 00 00 00 0A 00 00 00 00 1B 00 00 00 61 00 14 00 00 1E 00 00 FA 00 00 FA B4 00 05 00 00 01 32 14 FA 00 00 F9 00 1E 31 00 00 00 00 00 00 00 1E 00 00 00 00 00 00 00 00 00 00 09 00 01 80 00 00 02 02 00 00 00 00 4F 2C 20 DC FF 00 01 00 00 01 01 00 00 00 00 00 00 00 5F 21 A0";
+        var hexData = "3d 1e 8a 1f 8b 00 ff ff 87 fe f7 ff ff 07 7e fe 13 64 28 64 05 fe 02 03 23 14 f0 0a 32 05 ff 14 01 02 02 32 01 ff 00 2d 0f 78 05 ff 03 19 0a 32 05 fe 00 14 14 78 05 ff 01 18 18 18 01 fe 02 1e 0a 32 05 fe 00 01 00 00 64 02 00 5f 00 00 16 00 00 5f 00 00 64 fe 24 00 00 00 1d 00 00 3c 00 00 00 00 00 00 00 00 d2 30 1b 00 00 00 5c 00 1e 00 00 1e 00 00 1e 00 00 1e 00 00 3c 00 00 1e 00 00 1e 00 00 1e 01 00 00 db ff 00 03 00 00 1d 02 07 02 00 00 00 00 00 01 00 00 10 00 00 fe 00 00 55 55 00 00 02 00 0f 2c 00 00 00 01 1e 00 00 00 04 00 00 00 00 00 00 00 ef 1f 10";
 
         var hexBytes = hexData.split(" ");
         var bytesGroupArray = [];
